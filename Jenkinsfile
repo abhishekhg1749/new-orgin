@@ -9,7 +9,7 @@ pipeline{
     stages{
         stage('Git-checkout'){
             steps{
-                git branch: 'dev' , url: 'https://github.com/manjukolkar/web-application.git'
+                git branch: 'dev' , url: 'https://github.com/abhishekhg1749/new-orgin.git'
             }
         }
         stage('Code Compile'){
@@ -24,13 +24,13 @@ pipeline{
         }
         stage('Build and tag'){
             steps{
-                sh 'docker build -t manjukolkar007/project-1 .'
+                sh 'docker build -t abhishek1749/project-1 .'
             }
         }
         stage('Containerisation'){
             steps{
                 sh '''
-                docker run -it -d --name c8 -p 9008:8080 manjukolkar007/project-1
+                docker run -it -d --name c8 -p 9000:8080 abhishek1749/project-1
                 '''
             }
         }
@@ -45,7 +45,7 @@ pipeline{
         }
          stage('Pushing image to repository'){
             steps{
-                sh 'docker push manjukolkar007/project-1'
+                sh 'docker push abhishek1749/project-1'
             }
         }
         
