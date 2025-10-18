@@ -9,7 +9,7 @@ tools{
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-creds' // Jenkins credential ID
         IMAGE_NAME = 'abhishek1749/project-1'
-        BASE_CONTAINER_NAME = 'con8'
+        BASE_CONTAINER_NAME = 'container8'
         MAX_OLD_CONTAINERS = 5 // Number of old containers to keep
     }
 
