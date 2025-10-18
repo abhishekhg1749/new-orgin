@@ -1,13 +1,16 @@
 pipeline {
     agent any
 
-     tools{
+    tools{
          jdk 'java-11'
          maven 'maven'
      } 
-environment {
+
+
+    environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-creds' // Jenkins credential ID for Docker Hub
         IMAGE_NAME = 'abhishek1749/project-1'
+        CONTAINER_NAME = 'c8'
     }
 
     stages {
@@ -34,7 +37,6 @@ environment {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        // Use single quotes to avoid exposing password in logs
                         sh '''
                             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                         '''
@@ -55,11 +57,23 @@ environment {
                 }
             }
         }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Safely remove existing container if it exists
+                    sh "docker rm -f ${CONTAINER_NAME} || true"
+
+                    // Run new container
+                    sh "docker run -d --name ${CONTAINER_NAME} -p 9000:8080 ${IMAGE_NAME}:${IMAGE_TAG}"
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "Docker image ${IMAGE_NAME}:${IMAGE_TAG} built and pushed successfully!"
+            echo "Docker image ${IMAGE_NAME}:${IMAGE_TAG} built, pushed, and container '${CONTAINER_NAME}' is running!"
         }
         failure {
             echo "Pipeline failed. Check logs."
