@@ -4,26 +4,28 @@ pipeline {
      tools{
          jdk 'java-11'
          maven 'maven'
-
-    environment {
+     } 
+environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-creds' // Jenkins credential ID for Docker Hub
         IMAGE_NAME = 'abhishek1749/project-1'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"  // You can also use Git commit hash
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Make sure the repo contains your Dockerfile
-                git branch: 'main', url: 'https://github.com/abhishekhg1749/new-orgin.git'
+                git branch: 'main', url: 'https://github.com/yourusername/project-1.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // If Dockerfile is in a subdirectory, adjust 'dir'
-                dir('.') {
-                    sh "docker build -t ${abhishek1749}:${project-1} ."
+                script {
+                    // Get short Git commit hash
+                    def gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.IMAGE_TAG = gitCommit
+
+                    // Build Docker image
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
@@ -32,22 +34,32 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        // Use single quotes to avoid exposing password in logs
+                        sh '''
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        '''
                     }
                 }
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Tag and Push Docker Image') {
             steps {
-                sh "docker push ${abhishek1749}:${project-1}"
+                script {
+                    // Tag as 'latest' too
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+
+                    // Push both tags
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker push ${IMAGE_NAME}:latest"
+                }
             }
         }
     }
 
     post {
         success {
-            echo "Docker image ${abhishek1749}:${project-1} built and pushed successfully!"
+            echo "Docker image ${IMAGE_NAME}:${IMAGE_TAG} built and pushed successfully!"
         }
         failure {
             echo "Pipeline failed. Check logs."
