@@ -1,52 +1,53 @@
-pipeline {
+pipeline{
     agent any
-
-tools{
-         jdk 'java-11'
-         maven 'maven'
-     } 
-
-    environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds' // Jenkins credential ID
-        IMAGE_NAME = 'abhishek1749/project-1'
-        BASE_CONTAINER_NAME = 'container8'
-        MAX_OLD_CONTAINERS = 5 // Number of old containers to keep
+    
+    tools{
+        jdk 'java-11'
+        maven 'maven'
     }
-
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/yourusername/project-1.git'
+    
+    stages{
+        stage('Git-checkout'){
+            steps{
+                git branch: 'dev' , url: 'https://github.com/abhishekhg1749/new-orgin.git'
             }
         }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Get short Git commit hash
-                    def gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                    env.IMAGE_TAG = gitCommit
-
-                    // Build Docker image
-                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                }
+        stage('Code Compile'){
+            steps{
+                sh 'mvn compile'
             }
         }
-
+        stage('Code Package'){
+            steps{
+                sh 'mvn clean install'
+            }
+        }
+        stage('Build and tag'){
+            steps{
+                sh 'docker build -t manjukolkar007/project-1 .'
+            }
+        }
+        stage('Containerisation'){
+            steps{
+                sh '''
+                docker run -it -d --name c8 -p 9000:8080 abhishekhg1749/project-1
+                '''
+            }
+        }
         stage('Login to Docker Hub') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh '''
-                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        '''
+                    steps {
+                        script {
+                            withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                                sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
+                            }
+                        }
                     }
-                }
+        }
+         stage('Pushing image to repository'){
+            steps{
+                sh 'docker push abhishekhg1749/project-1'
             }
         }
-
-        stage('Tag and Push Docker Image') {
-            steps {
-                script {
-                    // Tag as 'latest' too
-                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+        
+    }
+}
