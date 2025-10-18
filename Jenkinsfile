@@ -6,11 +6,10 @@ tools{
          maven 'maven'
      } 
 
-
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds' // Jenkins credential ID for Docker Hub
+        DOCKERHUB_CREDENTIALS = 'dockerhub-creds' // Jenkins credential ID
         IMAGE_NAME = 'abhishek1749/project-1'
-        BASE_CONTAINER_NAME = 'c8'
+        BASE_CONTAINER_NAME = 'con8'
         MAX_OLD_CONTAINERS = 5 // Number of old containers to keep
     }
 
@@ -51,40 +50,3 @@ tools{
                 script {
                     // Tag as 'latest' too
                     sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
-
-                    // Push both tags
-                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "docker push ${IMAGE_NAME}:latest"
-                }
-            }
-        }
-
-        stage('Run Docker Container') {
-            steps {
-                script {
-                    // Dynamic container name per build
-                    def dynamicContainerName = "${BASE_CONTAINER_NAME}-${env.BUILD_NUMBER}"
-                    env.CONTAINER_NAME = dynamicContainerName
-
-                    // Run new container
-                    sh "docker run -d --name ${dynamicContainerName} -p 9000:8080 ${IMAGE_NAME}:${IMAGE_TAG}"
-                    echo "Container '${dynamicContainerName}' is running!"
-
-                    // Optional: Clean up old containers
-                    sh """
-                        docker ps -a --format '{{.Names}}' | grep '${BASE_CONTAINER_NAME}-' | sort -r | tail -n +${MAX_OLD_CONTAINERS+1} | xargs -r docker rm -f
-                    """
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "Docker image ${IMAGE_NAME}:${IMAGE_TAG} built, pushed, and container '${CONTAINER_NAME}' is running!"
-        }
-        failure {
-            echo "Pipeline failed. Check logs."
-        }
-    }
-}
