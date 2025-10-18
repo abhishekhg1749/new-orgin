@@ -1,7 +1,7 @@
 pipeline {
     agent any
 
-    tools{
+tools{
          jdk 'java-11'
          maven 'maven'
      } 
@@ -10,7 +10,8 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-creds' // Jenkins credential ID for Docker Hub
         IMAGE_NAME = 'abhishek1749/project-1'
-        CONTAINER_NAME = 'c8'
+        BASE_CONTAINER_NAME = 'c8'
+        MAX_OLD_CONTAINERS = 5 // Number of old containers to keep
     }
 
     stages {
@@ -61,11 +62,18 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    // Safely remove existing container if it exists
-                    sh "docker rm -f ${CONTAINER_NAME} || true"
+                    // Dynamic container name per build
+                    def dynamicContainerName = "${BASE_CONTAINER_NAME}-${env.BUILD_NUMBER}"
+                    env.CONTAINER_NAME = dynamicContainerName
 
                     // Run new container
-                    sh "docker run -d --name ${CONTAINER_NAME} -p 9000:8080 ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker run -d --name ${dynamicContainerName} -p 9000:8080 ${IMAGE_NAME}:${IMAGE_TAG}"
+                    echo "Container '${dynamicContainerName}' is running!"
+
+                    // Optional: Clean up old containers
+                    sh """
+                        docker ps -a --format '{{.Names}}' | grep '${BASE_CONTAINER_NAME}-' | sort -r | tail -n +${MAX_OLD_CONTAINERS+1} | xargs -r docker rm -f
+                    """
                 }
             }
         }
