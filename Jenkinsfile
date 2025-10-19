@@ -36,12 +36,20 @@ pipeline {
             }
         }
 
-        stage('containization') {
-            steps {
-                sh 'docker run -it -d --name c2 -p 9000:8080 abhishekhg17/project:1'
-            }
-        }
+stage('containization') {
+    steps {
+        // Stop and remove any existing container named c1
+        sh '''
+        if [ $(docker ps -a -q -f name=c1) ]; then
+            echo "Stopping and removing existing container c1..."
+            docker rm -f c1
+        fi
 
+        # Run the new container
+        docker run -d --name c1 -p 9000:8080 abhishekhg17/project:1
+        '''
+    }
+}
         stage('login Docker_hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
