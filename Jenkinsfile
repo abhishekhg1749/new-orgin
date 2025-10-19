@@ -24,17 +24,17 @@ pipeline {
         }
         stage('Build Docker Image'){
             steps{
-            sh 'docker build -t abhishekhg1749/new-orgin:project:1 .'
+            sh 'docker build -t abhishekhg1749:project:1 .'
             }
         }
         stage('Docker Image Scan'){
             steps{
-            sh 'trivy image --format table -o trivy-image-report.html abhishekhg1749/new-orgin:project:1'
+            sh 'trivy image --format table -o trivy-image-report.html abhishekhg1749/project:1 '
             }
         }
         stage('containization'){
             steps{
-            sh 'docker run -it -d --name c1 -p 9000:8080 abhishekhg1749/new-orgin:project:1'
+            sh 'docker run -it -d --name c1 -p 9000:8080 abhishekhg17/project:1'
             }
         }
         stage('login Docker_hub'){
@@ -43,6 +43,9 @@ pipeline {
                 sh 'echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin'
             }
             }
+        stage('push Docker image to Docker Hub')
+            steps{
+                sh 'docker push abhishekhg17/project:1
         }
     }
 }
