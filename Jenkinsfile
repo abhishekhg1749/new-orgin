@@ -38,7 +38,7 @@ pipeline {
 
         stage('containization') {
             steps {
-                sh 'docker run -it -d --name c1 -p 9000:8080 abhishekhg17/project:1'
+                sh 'docker run -it -d --name c2 -p 9000:8080 abhishekhg17/project:1'
             }
         }
 
