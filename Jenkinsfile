@@ -32,7 +32,7 @@ pipeline {
 
         stage('Docker Image Scan') {
             steps {
-                sh 'trivy image --format table -o trivy-image-report.html abhishekhg17/project:1'
+                sh 'trivy image --format table -o trivy-image-report.html abhishekhg1749/project:1'
             }
         }
 
@@ -46,7 +46,7 @@ stage('containization') {
         fi
 
         # Run the new container
-        docker run -d --name c1 -p 9000:8080 abhishekhg17/project:1
+        docker run -d --name c1 -p 9000:8080 abhishekhg1749/project:1
         '''
     }
 }
@@ -60,7 +60,7 @@ stage('containization') {
 
         stage('push Docker image to Docker Hub') {
             steps {
-                sh 'docker push abhishekhg17/project:1'
+                sh 'docker push abhishekhg1749/project:1'
             }
         }
     }
